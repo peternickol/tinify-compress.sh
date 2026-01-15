@@ -1,84 +1,138 @@
 # tinify-compress.sh
 
-A robust Bash script to **recursively compress images** using the
-**Tinify (TinyPNG/TinyJPG) API**.\
-Designed for **Debian/Ubuntu**, with safe defaults, clear logging, and
-no system Python pollution.
+A production-ready Bash script to **recursively compress images** using the
+**Tinify (TinyPNG / TinyJPG) API**, with **change detection, per-directory logs,
+and safe incremental re-runs**.
 
-The script uses a **local Python virtual environment** to avoid Debian's
-*externally-managed-environment (PEP 668)* restrictions.
+Designed for **Debian/Ubuntu**, using a **local Python virtual environment**
+to avoid system Python issues (PEP 668).
 
-------------------------------------------------------------------------
+---
 
 ## Features
 
--   Recursively crawls a directory
--   Compresses images in place (safe temp-file swap)
--   Supports: png, jpg, jpeg, webp, avif
--   Optional backups (`.bak`)
--   Dry-run mode
--   One-command setup on Debian/Ubuntu
--   Explicit error codes (CI-friendly)
--   No global Python or npm installs required
+### Core
+- Recursively crawls a directory tree
+- Compresses images **in place** (safe temp-file swap)
+- Supports: `png`, `jpg`, `jpeg`, `webp`, `avif`
+- Optional backups (`.bak`)
+- Dry-run mode
+- One-command setup (`--setup`)
+- Explicit exit codes (CI-friendly)
 
-------------------------------------------------------------------------
+### Change Tracking & Logging
+- Per-directory log file: `.tinify-compress.log`
+- Stores **SHA-256 hash + filename**
+- Skips unchanged files on subsequent runs
+- Automatically recompresses changed files
+- Automatically removes deleted files from logs
+- Handles filenames with spaces safely
+
+### Log Control Modes
+- Disable logging entirely
+- Rebuild logs from scratch
+- Rebuild logs **without compressing**
+
+---
 
 ## Requirements
 
--   Debian or Ubuntu
--   Tinify API key (free tier available at
-    https://tinypng.com/developers)
+- Debian or Ubuntu
+- Tinify API key (free tier available)  
+  https://tinypng.com/developers
 
-------------------------------------------------------------------------
+---
 
 ## Installation
 
-``` bash
+```bash
 chmod +x tinify-compress.sh
 ```
 
-Edit the script and set:
+Edit the script and set your API key:
 
-``` bash
+```bash
 readonly TINIFY_API_KEY="YOUR_API_KEY_HERE"
 ```
 
-Do not commit your API key to a public repository.
+⚠️ Never commit your API key to a public repository.
 
-------------------------------------------------------------------------
+---
 
 ## Setup
 
-``` bash
+```bash
 ./tinify-compress.sh --setup
 ```
 
-Creates a local virtual environment `.venv-tinify` and installs
-dependencies.
+Creates a local virtual environment `.venv-tinify` and installs dependencies.
 
-------------------------------------------------------------------------
+---
 
 ## Usage
 
-``` bash
+### Incremental compression
+```bash
 ./tinify-compress.sh -d ./assets
+```
+
+### Keep backups
+```bash
 ./tinify-compress.sh -d ./assets -b
+```
+
+### Dry run
+```bash
 ./tinify-compress.sh -d ./assets -n
 ```
 
-------------------------------------------------------------------------
+---
+
+## Logging & Change Detection
+
+Each directory containing images gets its own hidden log file:
+
+```
+.tinify-compress.log
+```
+
+Log format:
+```
+<sha256_hash><TAB><relative_filename>
+```
+
+---
+
+## Logging Flags
+
+Disable logging:
+```bash
+./tinify-compress.sh -d ./assets --no-log
+```
+
+Rebuild logs and recompress:
+```bash
+./tinify-compress.sh -d ./assets --rebuild-log
+```
+
+Rebuild logs only (no compression):
+```bash
+./tinify-compress.sh -d ./assets --rebuild-log-only
+```
+
+---
 
 ## Exit Codes
 
-    Code Meaning
-  ------ --------------------
-       0 Success
-       1 General error
-       2 Invalid arguments
-       3 Missing dependency
-       4 Runtime error
+| Code | Meaning |
+|----:|--------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Invalid arguments |
+| 3 | Missing dependency |
+| 4 | Runtime error |
 
-------------------------------------------------------------------------
+---
 
 ## License
 
